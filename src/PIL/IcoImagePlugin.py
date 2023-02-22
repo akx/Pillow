@@ -231,19 +231,24 @@ class IcoFile:
         """
         Decode a XOR + AND mask DIB frame
         """
-        # XOR + AND mask bmp frame
         im = BmpImagePlugin.DibImageFile(self.buf)
         Image._decompression_bomb_check(im.size)
-        # change tile dimension to only encompass XOR image
+        # Replace the internal size of the image to half
+        # height; the second half of the image is the (possibly
+        # empty and unused) AND mask.  This will cause the DIB
+        # decoder to stop halfway, giving us the AND mask we want.
         im._size = (im.size[0], int(im.size[1] / 2))
-        d, e, o, a = im.tile[0]
-        im.tile[0] = d, (0, 0) + im.size, o, a
+        # Load DIB parameters; we'll modify them later
+        # in this function and put them back.
+        decoder_name, extent, offset, args = im.tile[0]
+
+        mask = None
         if "bpp" in header:
             # If the image header declares a bpp, use it.
             bpp = header["bpp"]
         else:
             # Otherwise, determine from the BMP tile value.
-            mode = a[0]
+            mode = args[0]
             for map_bpp, (map_mode, map_rawmode) in BmpImagePlugin.BIT2MODE.items():
                 if mode == map_rawmode:
                     bpp = map_bpp
@@ -251,23 +256,13 @@ class IcoFile:
             else:
                 raise ValueError(f"Unable to determine bpp from {a}")
 
-        if 32 == bpp:
-            # 32-bit color depth icon image allows semitransparent areas
-            # PIL's DIB format ignores transparency bits, recover them.
-            # The DIB is packed in BGRX byte order where X is the alpha
-            # channel.
-            self.buf.seek(o)
-            # extract every 4th byte (eg. 3,7,11,15,...)
-            alpha_bytes = self.buf.read(im.size[0] * im.size[1] * 4)[3::4]
 
-            # convert to an 8bpp grayscale image
-            mask = Image.frombuffer(
-                "L",  # 8bpp
-                im.size,  # (w, h)
-                alpha_bytes,  # source chars
-                "raw",  # raw decoder
-                ("L", 0, -1),  # 8bpp inverted, unpadded, reversed
-            )
+        if bpp == 32:
+            # 32-bit color depth icon image allows semitransparent areas;
+            # tell the DIB decoder to retain them by hacking at the `args`
+            # and raw mode of the image.
+            args = ("BGRA", *args[1:])
+            im.mode = "RGBA"
         else:
             # get AND image from end of bitmap
             w = im.size[0]
@@ -295,10 +290,17 @@ class IcoFile:
                 ("1;I", int(w / 8), -1),  # 1bpp inverted, padded, reversed
             )
 
-            # now we have two images, im is XOR image and mask is AND image
-        # apply mask image as alpha channel
-        im = im.convert("RGBA")
-        im.putalpha(mask)
+        # Put the (possibly) modified tile information back; we'll
+        # need to do this before `convert` or anything that needs access
+        # to the actual image data is done.
+        im.tile[0] = decoder_name, (0, 0, *im.size), offset, args
+
+        if mask is not None:
+            # If we did acquire a separate mask image previously,
+            # apply it now.
+            im = im.convert("RGBA")
+            im.putalpha(mask)
+
         return im
 
 
