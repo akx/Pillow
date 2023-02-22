@@ -142,9 +142,8 @@ class IcoFile:
             msg = "No images were found"
             raise TypeError(msg)
 
-        self.entry = sorted(self.entry, key=lambda x: x["color_depth"])
-        # ICO images are usually squares
-        self.entry = sorted(self.entry, key=lambda x: x["square"], reverse=True)
+        # Ensure self.entry is sorted by size, largest first
+        self.entry.sort(key=lambda x: x["width"] * x["height"], reverse=True)
 
     def _check_header(self, header):
         if not _accept(header):
@@ -182,8 +181,6 @@ class IcoFile:
             )
             or 256
         )
-        icon_header["dim"] = (icon_header["width"], icon_header["height"])
-        icon_header["square"] = icon_header["width"] * icon_header["height"]
         return icon_header
 
     def sizes(self):
@@ -192,9 +189,15 @@ class IcoFile:
         """
         return {(h["width"], h["height"]) for h in self.entry}
 
+    def largest_size(self):
+        """
+        Get the largest icon size.
+        """
+        return max(self.sizes(), key=lambda x: x[0] * x[1])
+
     def getentryindex(self, size, bpp=False):
         for i, h in enumerate(self.entry):
-            if size == h["dim"] and (bpp is False or bpp == h["color_depth"]):
+            if size == (h["width"], h["height"]) and (bpp is False or bpp == h["color_depth"]):
                 return i
         return 0
 
@@ -333,7 +336,7 @@ class IcoImageFile(ImageFile.ImageFile):
     def _open(self):
         self.ico = self._ico_file_class(self.fp)
         self.info["sizes"] = self.ico.sizes()
-        self.size = self.ico.entry[0]["dim"]
+        self.size = self.ico.largest_size()
         self.load()
 
     @property
