@@ -235,15 +235,24 @@ class IcoFile:
         im._size = (im.size[0], int(im.size[1] / 2))
         d, e, o, a = im.tile[0]
         im.tile[0] = d, (0, 0) + im.size, o, a
-        # figure out where AND mask image starts
-        bpp = header["bpp"]
+        if "bpp" in header:
+            # If the image header declares a bpp, use it.
+            bpp = header["bpp"]
+        else:
+            # Otherwise, determine from the BMP tile value.
+            mode = a[0]
+            for map_bpp, (map_mode, map_rawmode) in BmpImagePlugin.BIT2MODE.items():
+                if mode == map_rawmode:
+                    bpp = map_bpp
+                    break
+            else:
+                raise ValueError(f"Unable to determine bpp from {a}")
+
         if 32 == bpp:
             # 32-bit color depth icon image allows semitransparent areas
             # PIL's DIB format ignores transparency bits, recover them.
             # The DIB is packed in BGRX byte order where X is the alpha
             # channel.
-
-            # Back up to start of bmp data
             self.buf.seek(o)
             # extract every 4th byte (eg. 3,7,11,15,...)
             alpha_bytes = self.buf.read(im.size[0] * im.size[1] * 4)[3::4]
@@ -267,6 +276,8 @@ class IcoFile:
             # padded row size * height / bits per char
 
             total_bytes = int((w * im.size[1]) / 8)
+
+            # figure out where AND mask image starts
             and_mask_offset = header["offset"] + header["size"] - total_bytes
 
             self.buf.seek(and_mask_offset)
