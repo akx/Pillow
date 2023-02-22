@@ -5,7 +5,9 @@
 # Windows Cursor support for PIL
 #
 # notes:
-#       uses BmpImagePlugin.py to read the bitmap data.
+#       uses IcoImagePlugin.py to read the bitmap data.
+#       Icons and cursors are almost identical,
+#       except for the header format.
 #
 # history:
 #       96-05-27 fl     Created
@@ -15,9 +17,8 @@
 #
 # See the README file for information on usage and redistribution.
 #
-from . import BmpImagePlugin, Image
-from ._binary import i16le as i16
-from ._binary import i32le as i32
+from . import IcoImagePlugin, Image
+
 
 #
 # --------------------------------------------------------------------

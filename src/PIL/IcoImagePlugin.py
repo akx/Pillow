@@ -121,14 +121,12 @@ def _accept(prefix):
 class IcoFile:
     def __init__(self, buf):
         """
-        Parse image from file-like object containing ico file data
+        Parse image from file-like object containing ico/cur file data
         """
 
         # check magic
         s = buf.read(6)
-        if not _accept(s):
-            msg = "not an ICO file"
-            raise SyntaxError(msg)
+        self._check_header(s)
 
         self.buf = buf
         self.entry = []
@@ -179,6 +177,11 @@ class IcoFile:
         self.entry = sorted(self.entry, key=lambda x: x["color_depth"])
         # ICO images are usually squares
         self.entry = sorted(self.entry, key=lambda x: x["square"], reverse=True)
+
+    def _check_header(self, header):
+        if not _accept(header):
+            msg = "not an ICO file"
+            raise SyntaxError(msg)
 
     def sizes(self):
         """
@@ -306,8 +309,11 @@ class IcoImageFile(ImageFile.ImageFile):
     format = "ICO"
     format_description = "Windows Icon"
 
+    # For subclasses.
+    _ico_file_class = IcoFile
+
     def _open(self):
-        self.ico = IcoFile(self.fp)
+        self.ico = self._ico_file_class(self.fp)
         self.info["sizes"] = self.ico.sizes()
         self.size = self.ico.entry[0]["dim"]
         self.load()
