@@ -1,0 +1,35 @@
+target-version = "py37"
+line-length = 88
+select = [
+    "E", # pycodestyle errors
+    "EM", # flake8-errmsg
+    "F", # pyflakes errors
+    "I", # isort
+    "ISC", # flake8-implicit-str-concat
+    "PGH", # pygrep-hooks
+    "RUF100",  # unused noqa (yesqa)
+    "S", # flake8-bandit
+    "W", # pycodestyle warnings
+    "YTT", # flake8-2020
+]
+ignore = [
+    # TODO: these could be enabled later
+    "S101", # use of assert
+    "S110", # try-except-pass
+    "S112", # try-except-continue
+]
+
+[isort]
+known-first-party = ["PIL"]
+
+[per-file-ignores]
+# Ignore Bandit in tests
+"Tests/*" = ["S"]
+"setup.py" = ["S"]
+# TODO: these files have some ambiguous `l` identifiers,
+#       which should be cleaned up.
+"src/PIL/BdfFontFile.py" = ["E741"]
+"src/PIL/Image.py" = ["E741"]
+"src/PIL/ImageFile.py" = ["E741"]
+"src/PIL/PcfFontFile.py" = ["E741"]
+"src/PIL/TiffImagePlugin.py" = ["E741"]
