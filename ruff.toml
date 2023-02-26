@@ -26,10 +26,3 @@ known-first-party = ["PIL"]
 # Ignore Bandit in tests
 "Tests/*" = ["S"]
 "setup.py" = ["S"]
-# TODO: these files have some ambiguous `l` identifiers,
-#       which should be cleaned up.
-"src/PIL/BdfFontFile.py" = ["E741"]
-"src/PIL/Image.py" = ["E741"]
-"src/PIL/ImageFile.py" = ["E741"]
-"src/PIL/PcfFontFile.py" = ["E741"]
-"src/PIL/TiffImagePlugin.py" = ["E741"]
