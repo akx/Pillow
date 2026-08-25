@@ -817,9 +817,8 @@ class TestFileLibTiff(LibTiffTestCase):
         # https://github.com/python-pillow/Pillow/issues/1651
 
         tmpfile = tmp_path / "temp.tif"
-        with open(tmpfile, "wb") as f:
-            with open("Tests/images/g4-multi.tiff", "rb") as src:
-                f.write(src.read())
+        with open("Tests/images/g4-multi.tiff", "rb") as src:
+            tmpfile.write_bytes(src.read())  # could be shutil.copyfile()
 
         im = Image.open(tmpfile)
         assert isinstance(im, TiffImagePlugin.TiffImageFile)

@@ -34,9 +34,8 @@ def test_sanity(codec: str, test_path: str, format: str) -> None:
 
 
 def test_unexpected_end(tmp_path: Path) -> None:
-    tmpfile = str(tmp_path / "temp.tar")
-    with open(tmpfile, "w"):
-        pass
+    tmpfile = tmp_path / "temp.tar"
+    tmpfile.touch()
 
     with pytest.raises(OSError, match="unexpected end of tar file"):
         with TarIO.TarIO(tmpfile, "test"):
