@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import subprocess
 import sys
 
 import fuzzers
@@ -8,7 +7,11 @@ import packaging
 import pytest
 
 from PIL import Image, features
-from Tests.helper import skip_unless_feature
+from Tests.helper import list_test_fonts, list_test_images, skip_unless_feature
+
+TYPE_CHECKING = False
+if TYPE_CHECKING:
+    import pathlib
 
 if sys.platform.startswith("win32") or sys.platform == "ios":
     pytest.skip("Fuzzer doesn't run on Windows or iOS", allow_module_level=True)
@@ -22,16 +25,12 @@ if libjpeg_turbo_version is not None:
         )
 
 
-@pytest.mark.parametrize(
-    "path",
-    subprocess.check_output("find Tests/images -type f", shell=True).split(b"\n"),
-)
-def test_fuzz_images(path: str) -> None:
+@pytest.mark.parametrize("path", list(list_test_images()))
+def test_fuzz_images(path: pathlib.Path) -> None:
     fuzzers.enable_decompressionbomb_error()
     try:
-        with open(path, "rb") as f:
-            fuzzers.fuzz_image(f.read())
-            assert True
+        fuzzers.fuzz_image(path.read_bytes())
+        assert True
     except (
         # Known exceptions from Pillow
         OSError,
@@ -50,15 +49,10 @@ def test_fuzz_images(path: str) -> None:
 
 
 @skip_unless_feature("freetype2")
-@pytest.mark.parametrize(
-    "path", subprocess.check_output("find Tests/fonts -type f", shell=True).split(b"\n")
-)
-def test_fuzz_fonts(path: str) -> None:
-    if not path:
-        return
-    with open(path, "rb") as f:
-        try:
-            fuzzers.fuzz_font(f.read())
-        except (Image.DecompressionBombError, Image.DecompressionBombWarning, OSError):
-            pass
-        assert True
+@pytest.mark.parametrize("path", list(list_test_fonts()))
+def test_fuzz_fonts(path: pathlib.Path) -> None:
+    try:
+        fuzzers.fuzz_font(path.read_bytes())
+    except (Image.DecompressionBombError, Image.DecompressionBombWarning, OSError):
+        pass
+    assert True

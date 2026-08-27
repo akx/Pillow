@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import logging
 import os
+import pathlib
 import shutil
 import subprocess
 import sys
@@ -20,7 +21,7 @@ from PIL import Image, ImageFile, ImageMath, features
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
-    from collections.abc import Callable, Sequence
+    from collections.abc import Callable, Iterable, Sequence
     from pathlib import Path
     from typing import Any
 
@@ -336,3 +337,13 @@ def is_win32() -> bool:
 
 def is_pypy() -> bool:
     return sys.implementation.name == "pypy"
+
+
+def list_test_images() -> Iterable[pathlib.Path]:
+    """Iterate over all test images in the Tests/images directory."""
+    return pathlib.Path(__file__).parent.joinpath("images").rglob("*.*")
+
+
+def list_test_fonts() -> Iterable[pathlib.Path]:
+    """Iterate over all test fonts in the Tests/fonts directory."""
+    return pathlib.Path(__file__).parent.joinpath("fonts").rglob("*.*")
