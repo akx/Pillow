@@ -53,3 +53,14 @@ def test_image(mode: str) -> None:
 def test_closed_file() -> None:
     with warnings.catch_warnings(action="error"):
         ImageQt.ImageQt("Tests/images/hopper.gif")
+
+
+def test_deprecated_align8to32_matches_new_impl() -> None:
+    im = hopper("P").resize((113, 113))  # size causes alignment issues
+    w, h = im.size
+    with pytest.warns(DeprecationWarning, match="Implement"):
+        old_b = ImageQt.align8to32(im.tobytes(), w, im.mode)
+    stride = ImageQt._aligned_stride(w, im.mode)
+    new_b = im.tobytes("raw", im.mode, stride)
+    assert old_b == new_b
+    assert len(old_b) == stride * h
