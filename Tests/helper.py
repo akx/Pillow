@@ -211,6 +211,7 @@ def is_pypy() -> bool:
     return sys.implementation.name == "pypy"
 
 
+@pytest.mark.isolated
 @pytest.mark.skipif(sys.platform.startswith("win32"), reason="Requires Unix or macOS")
 # Per https://stackoverflow.com/a/29007723/51685, due to JIT compilation,
 # RSS utilization is known to grow in PyPy.
