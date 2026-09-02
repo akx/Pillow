@@ -74,6 +74,7 @@ optional-dependencies.tests = [
   "packaging",
   "pytest",
   "pytest-cov",
+  "pytest-sugar",
   "pytest-timeout",
   "setuptools",
   "trove-classifiers>=2024.10.12",
