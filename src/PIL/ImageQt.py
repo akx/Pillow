@@ -188,10 +188,9 @@ def _toqclass_helper(im: Image.Image | str | QByteArray) -> dict[str, Any]:
     size = im.size
     if data is None:
         data = im.tobytes("raw", im.mode, _aligned_stride(size[0], im.mode))
-    __data = data
     if exclusive_fp:
         im.close()
-    return {"data": __data, "size": size, "format": format, "colortable": colortable}
+    return {"data": data, "size": size, "format": format, "colortable": colortable}
 
 
 if qt_is_installed:
