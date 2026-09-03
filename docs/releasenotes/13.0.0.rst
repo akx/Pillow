@@ -69,10 +69,11 @@ ImageCms.ImageCmsProfile.product_name and .product_info
 Deprecations
 ============
 
-TODO
-^^^^
+ImageQt align8to32()
+^^^^^^^^^^^^^^^^^^^^
 
-TODO
+``ImageQt.align8to32()`` has been deprecated. This was an undocumented helper function
+intended for internal use, so there is no replacement.
 
 API changes
 ===========

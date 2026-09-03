@@ -108,9 +108,7 @@ def align8to32(bytes: bytes, width: int, mode: str) -> bytes:
     """
     converts each scanline of data from 8 bit to 32 bit aligned
     """
-    deprecate(
-        "ImageQt.align8to32", 14, action="Implement a similar function in your code"
-    )
+    deprecate("ImageQt.align8to32", 14)
 
     bits_per_pixel = {"1": 1, "L": 8, "P": 8, "I;16": 16}[mode]
 
