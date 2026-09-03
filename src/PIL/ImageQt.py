@@ -135,10 +135,9 @@ def align8to32(bytes: bytes, width: int, mode: str) -> bytes:
 
 def _aligned_stride(width: int, mode: str) -> int:
     # Compute the stride (scanline size) in bytes when aligned
-    # to Qt's requirement that scanlines be aligned to 4 bytes.
+    # to Qt's requirement that scanlines be aligned to 32 bits.
     mode_bpp = {"1": 1, "L": 8, "P": 8, "I;16": 16}
-    bytes_per_line = (mode_bpp[mode] * width + 7) // 8
-    return (bytes_per_line + 3) & ~3
+    return (mode_bpp[mode] * width + 31) // 32 * (32 // 8)
 
 
 def _toqclass_helper(im: Image.Image | str | QByteArray) -> dict[str, Any]:
