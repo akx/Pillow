@@ -131,13 +131,6 @@ def align8to32(bytes: bytes, width: int, mode: str) -> bytes:
     return b"".join(new_data)
 
 
-def _aligned_stride(width: int, mode: str) -> int:
-    # Compute the stride (scanline size) in bytes when aligned
-    # to Qt's requirement that scanlines be aligned to 32 bits.
-    mode_bpp = {"1": 1, "L": 8, "P": 8, "I;16": 16}
-    return (mode_bpp[mode] * width + 31) // 32 * (32 // 8)
-
-
 def _toqclass_helper(im: Image.Image | str | QByteArray) -> dict[str, Any]:
     data = None
     colortable = None
@@ -184,7 +177,12 @@ def _toqclass_helper(im: Image.Image | str | QByteArray) -> dict[str, Any]:
 
     size = im.size
     if data is None:
-        data = im.tobytes("raw", im.mode, _aligned_stride(size[0], im.mode))
+        # Compute the stride (scanline size) in bytes when aligned
+        # to Qt's requirement that scanlines be aligned to 32 bits.
+        bpp = {"1": 1, "L": 8, "P": 8, "I;16": 16}[im.mode]
+        stride = (bpp * size[0] + 31) // 32 * (32 // 8)
+
+        data = im.tobytes("raw", im.mode, stride)
     if exclusive_fp:
         im.close()
     return {"data": data, "size": size, "format": format, "colortable": colortable}
