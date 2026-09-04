@@ -55,7 +55,7 @@ def test_closed_file() -> None:
         ImageQt.ImageQt("Tests/images/hopper.gif")
 
 
-def test_deprecated_align8to32_matches_new_impl() -> None:
+def test_align8to32_deprecation() -> None:
     im = hopper("1")
     with pytest.warns(DeprecationWarning, match="ImageQt.align8to32"):
         ImageQt.align8to32(im.tobytes(), im.width, im.mode)
