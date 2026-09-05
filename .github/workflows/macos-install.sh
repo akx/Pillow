@@ -4,9 +4,8 @@ set -e
 
 brew bundle --file=.github/workflows/Brewfile
 
-python_packages=(coverage defusedxml ipython olefile
-                 pytest pytest-cov pytest-timeout)
-python3 -m pip install --upgrade "${python_packages[@]}"
+python3 -m pip install --upgrade coverage defusedxml ipython olefile \
+                                 pytest pytest-cov pytest-timeout
 
 # optional test dependencies, only install if there's a binary package.
 python3 -m pip install --only-binary=:all: numpy || true
