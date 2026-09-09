@@ -218,7 +218,6 @@ def is_pypy() -> bool:
     return sys.implementation.name == "pypy"
 
 
-@pytest.mark.isolated
 @pytest.mark.skipif(psutil is None, reason="psutil not installed")
 @pytest.mark.skipif(
     sys.platform.startswith("win32"),
