@@ -152,16 +152,16 @@ getfont(PyObject *self_, PyObject *args, PyObject *kw) {
     if (!PyArg_ParseTupleAndKeywords(
             args,
             kw,
-            "etfnsy#n",
+            "etfnsn|y#",
             kwlist,
             config.filesystem_encoding,
             &filename,
             &size,
             &index,
             &encoding,
+            &layout_engine,
             &font_bytes,
-            &font_bytes_size,
-            &layout_engine
+            &font_bytes_size
         )) {
         PyConfig_Clear(&config);
         return NULL;
@@ -171,16 +171,16 @@ getfont(PyObject *self_, PyObject *args, PyObject *kw) {
     if (!PyArg_ParseTupleAndKeywords(
             args,
             kw,
-            "etfnsy#n",
+            "etfnsn|y#",
             kwlist,
             Py_FileSystemDefaultEncoding,
             &filename,
             &size,
             &index,
             &encoding,
+            &layout_engine,
             &font_bytes,
-            &font_bytes_size,
-            &layout_engine
+            &font_bytes_size
         )) {
         return NULL;
     }
