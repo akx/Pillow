@@ -252,3 +252,8 @@ Fixed opening XBM images with comments
 
 XBM images with C-style ``/* ... */`` comments in the header could not be identified.
 Comments on separate lines before the bits declaration are now skipped.
+
+Faster image comparison
+^^^^^^^^^^^^^^^^^^^^^^^
+
+Comparing two images with ``==`` was made faster by reducing data copying.
