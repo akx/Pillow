@@ -1075,6 +1075,21 @@ PyImaging_LibTiffEncoderNew(PyObject *self, PyObject *args) {
 
 #include "libImaging/Jpeg.h"
 
+/**
+ * Convert Python quantization tables to C arrays.
+ *
+ * @param qtables Input Python object representing quantization tables.
+ *                It can be a sequence of sequences of integers (e.g., list of lists) or
+ *                None, or NULL.
+ * @param qtablesLen Out argument: the number of quantization tables parsed. Must be
+ *                   non-null.
+ *
+ * @return A pointer to the allocated quantization tables, allocated with `malloc`.
+ *         The caller is responsible for freeing this memory.
+ *
+ *         Returns NULL either on error (in which case PyErr_Occurred() will be true)
+ *         or if qtables is nullish (so no custom quantization tables are provided).
+ */
 static unsigned int *
 get_qtables_arrays(PyObject *qtables, int *qtablesLen) {
     PyObject *tables;
