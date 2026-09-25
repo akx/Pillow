@@ -1092,12 +1092,6 @@ PyImaging_LibTiffEncoderNew(PyObject *self, PyObject *args) {
  */
 static unsigned int *
 get_qtables_arrays(PyObject *qtables, int *qtablesLen) {
-    PyObject *tables;
-    PyObject *table;
-    PyObject *table_data;
-    int i, j, num_tables;
-    unsigned int *qarrays;
-
     if ((qtables == NULL) || (qtables == Py_None)) {
         return NULL;
     }
@@ -1107,51 +1101,72 @@ get_qtables_arrays(PyObject *qtables, int *qtablesLen) {
         return NULL;
     }
 
-    tables = PySequence_Fast(qtables, "expected a sequence");
-    if (tables == NULL) {
+    Py_ssize_t num_tables = PySequence_Size(qtables);
+    if (num_tables < 0) {
         return NULL;
     }
-    num_tables = PySequence_Fast_GET_SIZE(tables);
     if (num_tables < 1 || num_tables > NUM_QUANT_TBLS) {
         PyErr_SetString(
             PyExc_ValueError,
             "Not a valid number of quantization tables. Should be between 1 and 4."
         );
-        Py_DECREF(tables);
         return NULL;
     }
     /* malloc check ok, num_tables <4, DCTSIZE2 == 64 from jpeglib.h */
-    qarrays = (unsigned int *)malloc(num_tables * DCTSIZE2 * sizeof(unsigned int));
+    unsigned int *qarrays = malloc(num_tables * DCTSIZE2 * sizeof(unsigned int));
     if (!qarrays) {
-        Py_DECREF(tables);
         return ImagingError_MemoryError();
     }
-    for (i = 0; i < num_tables; i++) {
-        table = PySequence_Fast_GET_ITEM(tables, i);
+    for (Py_ssize_t i = 0; i < num_tables; i++) {
+        // We expect these tables to be small enough
+        // that we don't need fast sequence access.
+        PyObject *table = PySequence_GetItem(qtables, i);
+        if (table == NULL) {
+            goto JPEG_QTABLES_ERR;
+        }
         if (!PySequence_Check(table)) {
+            Py_DECREF(table);
             PyErr_SetString(PyExc_ValueError, "Invalid quantization tables");
             goto JPEG_QTABLES_ERR;
         }
-        table_data = PySequence_Fast(table, "expected a sequence");
-        if (table_data == NULL) {
+        Py_ssize_t size = PySequence_Size(table);
+        if (size < 0) {
+            Py_DECREF(table);
             goto JPEG_QTABLES_ERR;
         }
-        if (PySequence_Fast_GET_SIZE(table_data) != DCTSIZE2) {
-            Py_DECREF(table_data);
+        if (size != DCTSIZE2) {
+            Py_DECREF(table);
             PyErr_SetString(PyExc_ValueError, "Invalid quantization table size");
             goto JPEG_QTABLES_ERR;
         }
-        for (j = 0; j < DCTSIZE2; j++) {
-            qarrays[i * DCTSIZE2 + j] =
-                PyLong_AS_LONG(PySequence_Fast_GET_ITEM(table_data, j));
+        for (int j = 0; j < DCTSIZE2; j++) {
+            PyObject *item = PySequence_GetItem(table, j);
+            if (item == NULL) {
+                Py_DECREF(table);
+                goto JPEG_QTABLES_ERR;
+            }
+            long value = PyLong_AsLong(item);
+            Py_DECREF(item);
+            if (value == -1 && PyErr_Occurred()) {
+                Py_DECREF(table);
+                goto JPEG_QTABLES_ERR;
+            }
+            if (value < 0 || value > 65535) {
+                Py_DECREF(table);
+                PyErr_SetString(
+                    PyExc_ValueError,
+                    "Invalid quantization table value. Should be between 0 and 65535."
+                );
+                goto JPEG_QTABLES_ERR;
+            }
+            qarrays[i * DCTSIZE2 + j] = (unsigned int)value;
         }
-        Py_DECREF(table_data);
+        Py_DECREF(table);
     }
 
     *qtablesLen = num_tables;
 
 JPEG_QTABLES_ERR:
-    Py_DECREF(tables);  // Run on both error and not error
     if (PyErr_Occurred()) {
         free(qarrays);
         qarrays = NULL;
