@@ -113,45 +113,53 @@ ImagingEffectNoise(int xsize, int ysize, float sigma) {
     return imOut;
 }
 
+/**
+ * Randomly spread pixels in an image.
+ * Returns a newly allocated image with pixels randomly spread.
+ *
+ * @param imIn Input image
+ * @param distance Spread distance; should be non-negative.
+ * @return Newly allocated image.
+ */
 Imaging
 ImagingEffectSpread(Imaging imIn, int distance) {
-    /* Randomly spread pixels in an image */
+    if (distance == 0) {
+        return ImagingCopy(imIn);
+    }
 
-    Imaging imOut;
-    int x, y;
-
-    imOut = ImagingNewDirty(imIn->mode, imIn->xsize, imIn->ysize);
+    Imaging imOut = ImagingNewDirty(imIn->mode, imIn->xsize, imIn->ysize);
 
     if (!imOut) {
         return NULL;
     }
 
-#define SPREAD(type, image)                                                       \
-    if (distance == 0) {                                                          \
-        for (y = 0; y < imOut->ysize; y++) {                                      \
-            for (x = 0; x < imOut->xsize; x++) {                                  \
-                imOut->image[y][x] = imIn->image[y][x];                           \
-            }                                                                     \
-        }                                                                         \
-    } else {                                                                      \
-        for (y = 0; y < imOut->ysize; y++) {                                      \
-            for (x = 0; x < imOut->xsize; x++) {                                  \
-                int xx = x + (rand() % distance) - distance / 2;                  \
-                int yy = y + (rand() % distance) - distance / 2;                  \
-                if (xx >= 0 && xx < imIn->xsize && yy >= 0 && yy < imIn->ysize) { \
-                    imOut->image[yy][xx] = imIn->image[y][x];                     \
-                    imOut->image[y][x] = imIn->image[yy][xx];                     \
-                } else {                                                          \
-                    imOut->image[y][x] = imIn->image[y][x];                       \
-                }                                                                 \
-            }                                                                     \
-        }                                                                         \
+    // Invariant over the loops.
+    int xsize = imIn->xsize, ysize = imIn->ysize;
+    int half = distance / 2;
+
+#define SPREAD(type)                                              \
+    for (int y = 0; y < ysize; y++) {                             \
+        /* out may not be restrict as ->image[yy] writes too */   \
+        const type *restrict in = (const type *)imIn->image[y];   \
+        type *out = (type *)imOut->image[y];                      \
+        for (int x = 0; x < xsize; x++) {                         \
+            int xx = x + (rand() % distance) - half;              \
+            int yy = y + (rand() % distance) - half;              \
+            if (xx >= 0 && xx < xsize && yy >= 0 && yy < ysize) { \
+                ((type *)imOut->image[yy])[xx] = in[x];           \
+                out[x] = ((const type *)imIn->image[yy])[xx];     \
+            } else {                                              \
+                out[x] = in[x];                                   \
+            }                                                     \
+        }                                                         \
     }
 
-    if (imIn->image8) {
-        SPREAD(UINT8, image8);
+    if (imIn->type == IMAGING_TYPE_I16) {
+        SPREAD(UINT16);
+    } else if (imIn->image8) {
+        SPREAD(UINT8);
     } else {
-        SPREAD(INT32, image32);
+        SPREAD(INT32);
     }
 
     ImagingCopyPalette(imOut, imIn);

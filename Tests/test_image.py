@@ -543,6 +543,25 @@ class TestImage:
         # Assert
         assert_image_equal(im, im2)
 
+    @pytest.mark.parametrize(
+        "mode, fill",
+        (
+            ("L", 0x12),
+            ("I", 0x12345678),
+            ("I;16", 0x1234),
+            ("I;16B", 0x1234),
+            ("F", 1.5),
+            ("RGB", (12, 34, 56)),
+        ),
+    )
+    @pytest.mark.parametrize("distance", (0, 5))
+    def test_effect_spread_modes(
+        self, mode: str, fill: float | tuple[int, ...], distance: int
+    ) -> None:
+        # Spreading a uniform image must not change it
+        im = Image.new(mode, (16, 8), fill)
+        assert_image_equal(im.effect_spread(distance), im)
+
     def test_check_size(self) -> None:
         # Checking that the _check_size function throws value errors when we want it to
         with pytest.raises(ValueError):
