@@ -370,9 +370,12 @@ class DdsImageFile(ImageFile.ImageFile):
                 mask_count = 3
 
             masks = struct.unpack(f"<{mask_count}I", header[84 : 84 + mask_count * 4])
-            if masks == (0xFF0000, 0x00FF00, 0x0000FF):
-                rawmode = "BGR"
-            elif masks == (0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000):
+            if masks == (0xFF0000, 0x00FF00, 0x0000FF) and bitcount in (24, 32):
+                rawmode = "BGR" if bitcount == 24 else "BGRX"
+            elif (
+                masks == (0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000)
+                and bitcount == 32
+            ):
                 rawmode = "BGRA"
             else:
                 self.tile = [ImageFile._Tile("dds_rgb", args=(bitcount, masks))]

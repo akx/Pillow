@@ -45,6 +45,7 @@ TEST_FILE_UNCOMPRESSED_L = "Tests/images/uncompressed_l.dds"
 TEST_FILE_UNCOMPRESSED_L_WITH_ALPHA = "Tests/images/uncompressed_la.dds"
 TEST_FILE_UNCOMPRESSED_RGB = "Tests/images/hopper.dds"
 TEST_FILE_UNCOMPRESSED_BGR15 = "Tests/images/bgr15.dds"
+TEST_FILE_UNCOMPRESSED_BGRX = "Tests/images/bgrx.dds"
 TEST_FILE_UNCOMPRESSED_RGB_WITH_ALPHA = "Tests/images/uncompressed_rgb.dds"
 
 
@@ -389,6 +390,12 @@ def test_palette() -> None:
 def test_zero_mask_totals() -> None:
     with Image.open("Tests/images/zero_mask_totals.dds") as im:
         im.load()
+
+
+def test_uncompressed_bgrx() -> None:
+    with Image.open(TEST_FILE_UNCOMPRESSED_BGRX) as im:
+        assert im.mode == "RGB"
+        assert_image_equal_tofile(im, "Tests/images/hopper.png")
 
 
 def test_unsupported_header_size() -> None:
