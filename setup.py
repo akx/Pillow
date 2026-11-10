@@ -1012,6 +1012,10 @@ class pil_build_ext(build_ext):
         tk_libs = ["psapi"] if sys.platform in ("win32", "cygwin") else []
         self._update_extension("PIL._imagingtk", tk_libs)
 
+        # Workaround for distutils free-threading bug: https://github.com/pypa/distutils/issues/439
+        if self.compiler.compiler_type == "msvc" and not self.compiler.initialized:
+            self.compiler.initialize()
+
         build_ext.build_extensions(self)
 
         #
