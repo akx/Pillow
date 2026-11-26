@@ -133,6 +133,12 @@ overrides = [
   { select = "*_iphoneos", environment.PATH = "$(pwd)/build/deps/iphoneos/bin:$PATH" },
   # iOS simulator environment is isolated by cibuildwheel, but needs the dependencies
   { select = "*_iphonesimulator", environment.PATH = "$(pwd)/build/deps/iphonesimulator/bin:$PATH" },
+  # By default, manylinux_2_28 uses gcc-toolset-14.
+  # Auditwheel will verify the wheels themselves remain manylinux_2_28 compliant.
+  { select = "*-manylinux_*", before-all = [
+    "dnf install -y gcc-toolset-16-gcc gcc-toolset-16-gcc-c++",
+    ".github/workflows/wheels-dependencies.sh",
+  ], environment.PATH = "/opt/rh/gcc-toolset-16/root/usr/bin:$PATH" },
   { select = "*-win32", test-requires = [] },
   # NumPy does not yet have PyPy 3.12 wheels
   { select = "pp312*", test-requires = [] },

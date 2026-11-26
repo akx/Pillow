@@ -210,6 +210,13 @@ Pillow 13.0.0 also failed to import on systems where ``libz.so.1`` was not on th
 default library search path, such as NixOS. Linux wheels no longer require a
 system zlib, and gain the speed of zlib-ng as macOS and Windows wheels already did.
 
+GCC 16 for manylinux wheels
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The manylinux wheels, and the libraries bundled in them, are now compiled with GCC 16
+instead of GCC 14. The wheels remain compatible with the same Linux distributions as
+before. The musllinux wheels are still compiled with GCC 14.
+
 Remapping palettes with too many entries
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
