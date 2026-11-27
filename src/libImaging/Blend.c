@@ -17,6 +17,18 @@
 
 #include "Imaging.h"
 
+// Equivalent to roundf(v) for 0 <= v < 2^31, to avoid GCC calling out to libm.
+static inline int
+round_nonnegative(float v) {
+    // 0.49999997f: largest float below 0.5
+    return (int)(v + 0.49999997f);
+}
+
+static inline int
+round_clip(float v, float max) {
+    return round_nonnegative(v <= 0 ? 0 : v < max ? v : max);
+}
+
 /**
  * Interpolate (or, for alpha outside [0, 1], extrapolate) between imIn1 and
  * imIn2 by `alpha`, returning a newly allocated result.
@@ -64,7 +76,7 @@ ImagingBlend(Imaging imIn1, Imaging imIn2, float alpha) {
                 UINT8 *restrict in2 = (UINT8 *)imIn2->image[y];
                 UINT8 *restrict out = (UINT8 *)imOut->image[y];
                 for (x = 0; x < linesize; x++) {
-                    out[x] = (UINT8)roundf(
+                    out[x] = (UINT8)round_nonnegative(
                         (int)in1[x] + alpha * ((int)in2[x] - (int)in1[x])
                     );
                 }
@@ -78,8 +90,8 @@ ImagingBlend(Imaging imIn1, Imaging imIn2, float alpha) {
                 UINT8 *restrict in2 = (UINT8 *)imIn2->image[y];
                 UINT8 *restrict out = (UINT8 *)imOut->image[y];
                 for (x = 0; x < linesize; x++) {
-                    out[x] = (UINT8)CLIP8(
-                        roundf((int)in1[x] + alpha * ((int)in2[x] - (int)in1[x]))
+                    out[x] = (UINT8)round_clip(
+                        (int)in1[x] + alpha * ((int)in2[x] - (int)in1[x]), 255
                     );
                 }
             }
@@ -98,7 +110,7 @@ ImagingBlend(Imaging imIn1, Imaging imIn2, float alpha) {
                                ((int)in1[x * 2 + (bigendian ? 0 : 1)] << 8);
                     float v2 = (int)in2[x * 2 + (bigendian ? 1 : 0)] +
                                ((int)in2[x * 2 + (bigendian ? 0 : 1)] << 8);
-                    UINT16 v = roundf(v1 + alpha * (v2 - v1));
+                    UINT16 v = round_nonnegative(v1 + alpha * (v2 - v1));
                     out[x * 2 + (bigendian ? 1 : 0)] = (UINT8)(v & 0xff);
                     out[x * 2 + (bigendian ? 0 : 1)] = (UINT8)(v >> 8);
                 }
@@ -114,7 +126,7 @@ ImagingBlend(Imaging imIn1, Imaging imIn2, float alpha) {
                                ((int)in1[x * 2 + (bigendian ? 0 : 1)] << 8);
                     float v2 = (int)in2[x * 2 + (bigendian ? 1 : 0)] +
                                ((int)in2[x * 2 + (bigendian ? 0 : 1)] << 8);
-                    UINT16 v = CLIP16(roundf(v1 + alpha * (v2 - v1)));
+                    UINT16 v = round_clip(v1 + alpha * (v2 - v1), 65535);
                     out[x * 2 + (bigendian ? 1 : 0)] = (UINT8)(v & 0xff);
                     out[x * 2 + (bigendian ? 0 : 1)] = (UINT8)(v >> 8);
                 }
